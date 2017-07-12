@@ -1,0 +1,149 @@
+package cn.com.jinzhong.shandonggrain.android.base;
+
+import android.app.Activity;
+import android.app.ProgressDialog;
+import android.content.Context;
+import android.content.Intent;
+import android.content.SharedPreferences;
+import android.os.Bundle;
+import android.os.Handler;
+import android.support.annotation.Nullable;
+import android.support.v7.app.AppCompatActivity;
+import android.view.inputmethod.InputMethodManager;
+import android.widget.Toast;
+
+import com.gyf.barlibrary.ImmersionBar;
+
+import java.util.LinkedList;
+import java.util.List;
+import java.util.ListIterator;
+
+import butterknife.ButterKnife;
+import cn.com.jinzhong.shandonggrain.android.activity.MainActivity;
+
+/**
+ * Created by ${sheldon} on 2017/7/10.
+ */
+
+public abstract class BaseActivity extends AppCompatActivity {
+
+    protected static List<Activity> mActivities = new LinkedList<Activity>();
+    private Handler mHandler = new Handler();
+    private ProgressDialog mProgressDialog;
+    private InputMethodManager mInputMethodManager;
+    private SharedPreferences mSharedPreferences;
+    private long mPreTime;
+    @Override
+    protected void onCreate(@Nullable Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        ImmersionBar.with(this).init();
+        setContentView(getLayoutRes());
+        synchronized (mActivities) {
+            mActivities.add(this);
+        }
+        ButterKnife.inject(this);
+        mSharedPreferences = getSharedPreferences("config",MODE_PRIVATE);
+        init();
+    }
+    /*
+    * 初始化方法
+    * */
+    protected void init() {}
+
+    public abstract int getLayoutRes();
+    /*
+    * 开启activity
+    * */
+    protected void startActivity(Class activity) {
+        startActivity(activity, true);
+    }
+
+    protected void startActivity(Class activity, boolean finish) {
+        Intent intent = new Intent(this, activity);
+        startActivity(intent);
+        if (finish) {
+            finish();
+        }
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        synchronized (mActivities) {
+            mActivities.remove(this);
+        }
+       ImmersionBar.with(this).destroy();  //不调用该方法，如果界面bar发生改变，在不关闭app的情况下，退出此界面再进入将记忆最后一次bar改变的状态
+    }
+
+    /**
+     * 退出应用
+     */
+    public static void exitApp() {
+        // 遍历所有的activity，finish
+        ListIterator<Activity> iterator = mActivities.listIterator();
+        while (iterator.hasNext()) {
+            Activity next = iterator.next();
+            next.finish();
+        }
+    }
+    protected void post(Runnable runnable) {
+        postDelay(runnable, 0);
+    }
+
+    protected void postDelay(Runnable runnable, long millis) {
+        mHandler.postDelayed(runnable, millis);
+    }
+    /*
+    * 显示加载框
+    * */
+    protected void showProgress(String msg) {
+        if (mProgressDialog == null) {
+            mProgressDialog = new ProgressDialog(this);
+            mProgressDialog.setCancelable(true);
+        }
+        mProgressDialog.setMessage(msg);
+        mProgressDialog.show();
+    }
+
+    protected void hideProgress() {
+        if (mProgressDialog != null) {
+            mProgressDialog.dismiss();
+        }
+    }
+    /*
+    * toast
+    * */
+    protected void toast(String msg) {
+        Toast.makeText(BaseActivity.this, msg, Toast.LENGTH_SHORT).show();
+    }
+        /*
+        * 隐藏键盘
+        * */
+    protected void hideKeyBoard() {
+        if (mInputMethodManager == null) {
+            mInputMethodManager = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
+        }
+        mInputMethodManager.hideSoftInputFromWindow(getCurrentFocus().getWindowToken(), 0);
+    }
+    /**
+     * 返回键的处理
+     */
+    @Override
+    public void onBackPressed() {
+        if (this instanceof MainActivity) {
+            if (System.currentTimeMillis() - mPreTime > 2000) {
+                Toast.makeText(this, "再按一次退出应用",
+                        Toast.LENGTH_SHORT).show();
+                mPreTime = System.currentTimeMillis();
+                return;
+            } else {
+                exitApp();
+                finish();
+                super.onBackPressed();
+            }
+        } else {
+            super.onBackPressed();
+        }
+    }
+}
+

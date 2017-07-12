@@ -1,0 +1,20 @@
+<resources>
+    <string name="app_name">省平台</string>
+    <string name="title_home">首页</string>
+    <string name="title_dashboard">Dashboard</string>
+    <string name="title_notifications">Notifications</string>
+    <string name="title_channel">频道</string>
+    <string name="title_work">工作台</string>
+    <string name="title_mine">我的</string>
+    <string name="title_framework">组织架构</string>
+    <string name="me_bank_card">标题</string>
+    <string name="user_name">请输入身份证号</string>
+    <string name="user_pwd">请输入密码</string>
+    <string name="login">登陆</string>
+    <string name="register_name">请输入真实姓名</string>
+    <string name="register_card">请填写身份证号码</string>
+    <string name="register_pwd">请输入密码</string>
+    <string name="register_pwd_re">请确认密码</string>
+    <string name="register_phone">请输入手机号</string>
+    <string name="register_phone_re">请确认手机号</string>
+</resources>
